@@ -1,0 +1,17 @@
+{
+    "name": "xiaoheime/swoole-build",
+    "type": "project",
+    "require": {
+        "symfony/console": "^5.4",
+        "symfony/finder": "^5.4"
+    },
+    "require-dev": {
+        "swoole/ide-helper": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/",
+            "Build\\": "src/"
+        }
+    }
+}
