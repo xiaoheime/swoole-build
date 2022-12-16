@@ -1,10 +1,13 @@
 <?php
  namespace Build\Server;
 
+ use Build\HttpServer\HttpServer;
+ use Build\HttpServer\Route\DispatcherFactory;
+
  class Server implements ServerInterface
  {
 
-     protected  $server;
+     protected \Swoole\Http\Server $server;
 
      public function __construct()
      {
@@ -15,7 +18,7 @@
          // TODO: Implement init() method.
          foreach ($config['servers'] as $server) {
             $this->server = new \Swoole\Http\Server($server['host'], $server['port'], $server['type']);
-            $this->registerSwooleEvents($server['callbacks']);
+            $this->registerEvents($server['callbacks']);
          }
          return $this;
      }
@@ -25,16 +28,24 @@
          $this->getServer()->start();
      }
 
-     public function getServer()
+     public function getServer(): \Swoole\Http\Server
      {
          return $this->server;
      }
 
-     public function registerSwooleEvents(array $callbacks)
+     public function registerEvents(array $callbacks)
      {
          foreach ($callbacks as $event => $callback) {
              [$class, $method] = $callback;
-             $this->server->on($event, [ new $class(), $method]);
+             if($class === HttpServer::class) {
+                 $instance = new $class(new DispatcherFactory());
+             }else{
+                 $instance = new $class();
+             }
+             $this->server->on($event, [ $instance, $method]);
+             if(method_exists($instance, 'initCoreMiddleware')) {
+                 $instance->initCoreMiddleware();
+             }
          }
      }
  }
